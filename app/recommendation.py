@@ -5,7 +5,7 @@
 from random import choice
 
 from app.User import User
-
+import operator
 
 class Recommendation:
 
@@ -57,17 +57,67 @@ class Recommendation:
     # Display the recommendation for a user
     def make_recommendation(self, user):
         movie = choice(list(self.movies.values())).title
+        similarities = self.compute_all_similarities(user)
+        sorted_sim = sorted(similarities, key=lambda x: x[1])
+        # DEBUG
+        #for key, user in self.test_users.items():
+        #    print(key)
+        #    print(user.id)
+        #print(self.get_similarity(user, self.test_users[11]))
 
-        return "Vos recommandations : " + ", ".join([movie])
+        id_best_score = []
+        for i in range(1, 6):
+            id_best_score.append(sorted_sim[len(sorted_sim) - i][0])
+
+        closest_users = []
+        for id_closest_users in id_best_score:
+            closest_users.append(self.test_users[id_closest_users])
+
+        list_recommandations = []
+        for close_user in closest_users:
+            list_recommandations.append([film.title for film in close_user.good_ratings])
+            
+        recommendations = []
+        for i in range(0,5):
+            for j in range(i,5):
+                recommendations += set(list_recommandations[i]) & set(list_recommandations[j])
+
+        recommendations = set(recommendations)
+        return "Vos recommandations : " + ", ".join(recommendations)
 
     # Compute the similarity between two users
     @staticmethod
     def get_similarity(user_a, user_b):
-        return 1
+        score = 0
+        normA = Recommendation.get_user_norm(user_a)
+        normB = Recommendation.get_user_norm(user_b)
+
+        if normA < normB:
+            main_user = user_a
+            other_user = user_b
+        else:
+            main_user = user_b
+            other_user = user_a
+
+        for goodRatingMain in main_user.good_ratings:
+            if goodRatingMain in other_user.bad_ratings:
+                score -= 1
+            if goodRatingMain in other_user.good_ratings:
+                score += 1
+        for badRatingMain in main_user.bad_ratings:
+            if badRatingMain in other_user.bad_ratings:
+                score += 1
+            if badRatingMain in other_user.good_ratings:
+                score -= 1
+
+        return score/Recommendation.get_user_norm(main_user)
 
     # Compute the similarity between a user and all the users in the data set
     def compute_all_similarities(self, user):
-        return []
+        res = []
+        for key, tmp_user in self.test_users.items():
+            res.append((tmp_user.id, self.get_similarity(user, tmp_user)))
+        return res
 
     @staticmethod
     def get_best_movies_from_users(users):
@@ -79,7 +129,7 @@ class Recommendation:
 
     @staticmethod
     def get_user_norm(user):
-        return 1
+        return len(user.good_ratings) + len(user.bad_ratings)
 
     # Return a vector with the normalised ratings of a user
     @staticmethod
