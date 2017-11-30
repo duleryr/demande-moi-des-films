@@ -5,7 +5,9 @@
 from random import choice
 
 from app.User import User
+from sklearn.cluster import KMeans
 import operator
+import numpy as np
 
 class Recommendation:
 
@@ -34,6 +36,11 @@ class Recommendation:
 
         # Launch the process of ratings
         self.process_ratings_to_users()
+
+        self.genreVector = np.array([np.array(movie.getGenres()) for key, movie in self.movies.items()], ndmin=2)
+
+        kmeans = KMeans(n_clusters=10, random_state=0).fit(self.genreVector)
+
 
     # To process ratings, users associated to ratings are created and every rating is then stored in its user
     def process_ratings_to_users(self):

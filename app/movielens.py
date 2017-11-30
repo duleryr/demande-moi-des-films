@@ -70,6 +70,27 @@ class Movie:
             if genre == "Western":
                 self.western = 1
 
+    def getGenres(self):
+        genres = []
+        genres.append(self.action)
+        genres.append(self.adventure)
+        genres.append(self.animation)
+        genres.append(self.children)
+        genres.append(self.comedy)
+        genres.append(self.crime)
+        genres.append(self.documentary)
+        genres.append(self.drama)
+        genres.append(self.fantasy)
+        genres.append(self.film_noir)
+        genres.append(self.horror)
+        genres.append(self.musical)
+        genres.append(self.mystery)
+        genres.append(self.romance)
+        genres.append(self.sci_fi)
+        genres.append(self.thriller)
+        genres.append(self.war)
+        genres.append(self.western)
+        return genres
 
 class Rating:
 
