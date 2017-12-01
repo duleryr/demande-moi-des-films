@@ -42,7 +42,7 @@ class Bot(object):
     def ask_question(self, user):
         movie = self.movie_picker.pick_a_movie()
         user.set_pending_question(movie)
-        return u"Avez-vous aimé : " + movie.title + u" ?"
+        return u"Sur une échelle de 0 à 5, à quel point avez-vous aimé : " + movie.title + u" ?"
 
 
 # Take a movie randomly
