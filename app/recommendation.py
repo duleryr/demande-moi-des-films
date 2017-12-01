@@ -29,18 +29,21 @@ class Recommendation:
         #     * user (with the user number)
         #     * is_appreciated (in the case of simplified rating, whether or not the user liked the movie)
         #     * score (in the case of rating, the score given by the user)
-        self.ratings = movielens.simplified_ratings
+        self.ratings = movielens.ratings
 
         # This is the set of users in the training set
         self.test_users = {}
 
+        self.kmeans = self.getKmeans()
+
         # Launch the process of ratings
         self.process_ratings_to_users()
 
-        self.genreVector = np.array([np.array(movie.getGenres()) for key, movie in self.movies.items()], ndmin=2)
 
-        kmeans = KMeans(n_clusters=10, random_state=0).fit(self.genreVector)
-
+    def getKmeans(self):
+        genreVector = np.array([np.array(movie.getGenres()) for key, movie in self.movies.items()], ndmin=2)
+        KmeansTab = KMeans(n_clusters=10, random_state=0).fit(genreVector)
+        return KmeansTab
 
     # To process ratings, users associated to ratings are created and every rating is then stored in its user
     def process_ratings_to_users(self):
@@ -54,6 +57,11 @@ class Recommendation:
                     user.bad_ratings.append(movie)
             if hasattr(rating, 'score'):
                 user.ratings[movie.id] = rating.score
+                cluster_num = self.kmeans.predict([self.movies[movie.id].getGenres()])[0]
+                user.scoresByClusters[cluster_num].append(rating.score)
+        for rating in self.ratings:
+            user = self.register_test_user(rating.user)
+            print(self.get_normalised_cluster_notations(user))
 
     # Register a user if it does not exist and return it
     def register_test_user(self, sender):
@@ -106,6 +114,9 @@ class Recommendation:
             main_user = user_b
             other_user = user_a
 
+        if Recommendation.get_user_norm(main_user) is 0:
+            return 0
+
         for goodRatingMain in main_user.good_ratings:
             if goodRatingMain in other_user.bad_ratings:
                 score -= 1
@@ -141,4 +152,13 @@ class Recommendation:
     # Return a vector with the normalised ratings of a user
     @staticmethod
     def get_normalised_cluster_notations(user):
-        return []
+        res = []
+        for clusterScores in user.scoresByClusters:
+            sumScores = 0
+            for score in clusterScores:
+                sumScores += score
+            if len(clusterScores) is not 0:
+                res.append(sumScores/len(clusterScores))
+            else:
+                res.append(2.5)
+        return res
